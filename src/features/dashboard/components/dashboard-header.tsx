@@ -1,10 +1,8 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { Headphones, ThumbsUp } from "lucide-react";
-import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
+import { HeaderActions } from "@/components/header-actions";
 
 export function DashboardHeader() {
     const { isLoaded, user } = useUser();
@@ -15,25 +13,12 @@ export function DashboardHeader() {
                 <p className="text-sm text-muted-foreground">
                     Nice to see you
                 </p>
-                <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight">
+                <h2 className="text-2xl lg:text-3xl font-semibold tracking-tight">
                     {isLoaded ? (user?.fullName ?? user?.firstName ?? "there") : "..."}
-                </h1>
+                </h2>
             </div>
 
-            <div className="lg:flex items-center gap-3 hidden">
-                <Button variant="outline" size="sm" asChild>
-                    <Link href="mailto:business@codewithantonio.com">
-                        <ThumbsUp />
-                        <span className="hidden lg:block">Feedback</span>
-                    </Link>
-                </Button>
-                <Button variant="outline" size="sm" asChild>
-                    <Link href="mailto:business@codewithantonio.com">
-                        <Headphones />
-                        <span className="hidden lg:block">Need help?</span>
-                    </Link>
-                </Button>
-            </div>
+            <HeaderActions email="business@codewithantonio.com" className="lg:flex hidden" />
 
 
         </div>

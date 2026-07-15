@@ -90,7 +90,7 @@ export function DashboardSidebar() {
             icon: AudioLines,
         },
         {
-            title: "Voice Clonig",
+            title: "Voice Cloning",
             icon: Volume2,
         },
     ];

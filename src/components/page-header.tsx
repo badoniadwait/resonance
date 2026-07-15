@@ -1,9 +1,6 @@
-import { Headphones, ThumbsUp } from "lucide-react";
-import Link from "next/link";
-
-import { Button } from "./ui/button";
 import { SidebarTrigger } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
+import { HeaderActions } from "./header-actions";
 
 export function PageHeader({title,className}: {title: string; className?: string}) {
     return (
@@ -14,20 +11,7 @@ export function PageHeader({title,className}: {title: string; className?: string
                 <SidebarTrigger/>
                 <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
             </div>
-            <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm" asChild>
-                    <Link href={"mainto:badoniadwait@gmail.com"}>
-                        <ThumbsUp/>
-                        <span className="hidden lg:block">Feedback</span>
-                    </Link>
-                </Button>
-                <Button variant="outline" size="sm" asChild>
-                    <Link href={"mainto:badoniadwait@gmail.com"}>
-                        <ThumbsUp/>
-                        <span className="hidden lg:block">Need help?</span>
-                    </Link>
-                </Button>
-            </div>
+            <HeaderActions email="badoniadwait@gmail.com" />
         </div>
     )
 }
