@@ -6,12 +6,16 @@ import { useStore } from "@tanstack/react-form";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Slider } from "@/components/ui/slider";
 import { sliders } from "../data/sliders";
+import { VoiceSelector } from "./voice-selector";
 
 export function SettingsPanelSettings() {
     const form = useTypedAppFormContext(ttsFormOptions);
     const isSubmitting = useStore(form.store, (s) => s.isSubmitting);
     return (
         <>
+        <div className="border-b border-dashed p-4">
+            <VoiceSelector/>
+        </div>
 
             {/* Voice Adjustments Section */}
             <div className="p-4 flex-1">
