@@ -42,7 +42,7 @@ model Voice {
   category    VoiceCategory @default(GENERAL)
   language    String        @default("en-US")
   variant     Voicevariant
-  r2ObjectKey String?
+  cloudinaryPublicId String?
 
   generations Generation[]
 
@@ -60,7 +60,7 @@ model Generation {
   voice             Voice?  @relation(fields: [voiceId], references: [id], onDelete: SetNull)
   text              String
   voiceName         String
-  r2ObjectKey       String?
+  cloudinaryPublicId String?
   temperature       Float
   topP              Float
   topK              Int
