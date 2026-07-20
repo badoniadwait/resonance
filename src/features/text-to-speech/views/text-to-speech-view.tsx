@@ -28,6 +28,7 @@ export function TextToSpeechView({
         ...defaultTTSValues,
         ...initialValues,
         voiceId: resolvedVoiceId,
+        text: initialValues?.text ?? defaultTTSValues.text,
     };
 
     return (

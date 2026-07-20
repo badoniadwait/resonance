@@ -76,11 +76,27 @@ export const voicesRouter = createTRPCRouter({
                     message: "Voice not found"
                 })
             }
+
+            const tombstone = voice.cloudinaryPublicId
+                ? await prisma.deletionTombstone.create({
+                    data: { cloudinaryPublicId: voice.cloudinaryPublicId }
+                })
+                : null;
+
             await prisma.voice.delete({
                 where: {id: voice.id}
             });
-            if(voice.cloudinaryPublicId) {
-                await deleteAudio(voice.cloudinaryPublicId).catch(() => {});
+
+            if (tombstone) {
+                try {
+                    await deleteAudio(voice.cloudinaryPublicId!);
+                    await prisma.deletionTombstone.delete({ where: { id: tombstone.id } });
+                } catch (err) {
+                    await prisma.deletionTombstone.update({
+                        where: { id: tombstone.id },
+                        data: { retryCount: { increment: 1 }, lastError: String(err) },
+                    });
+                }
             }
         }),
 });

@@ -43,6 +43,15 @@ model Generation {
   @@index([voiceId])
 }
 
+model DeletionTombstone {
+  id                 String   @id @default(cuid())
+  cloudinaryPublicId String
+  retryCount         Int      @default(0)
+  lastError          String?
+  createdAt          DateTime @default(now())
+  updateAt           DateTime @updatedAt
+}
+
 enum Voicevariant {
   SYSTEM
   CUSTOM
