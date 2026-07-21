@@ -46,3 +46,9 @@ next-env.d.ts
 /src/generated/prisma
 
 /scripts/system-voices
+
+# cache
+/__pycache__
+
+# auto generated 
+/prisma/migrations
