@@ -11,15 +11,19 @@ import { VoicePreviewPanel } from "../components/voice-preview-panel";
 import { VoicePreviewMobile } from "../components/voice-preview-mobile";
 
 export function TextToSpeechDetailView({
-    generationId
-}: { generationId?: Partial<TTSFormValues> }) {
-
+    generationId,
+}: {
+    generationId: string;
+}) {
     const trpc = useTRPC();
-    const [generationQuery, voicesQuery,] = useSuspenseQueries({
+    const [
+        generationQuery,
+        voicesQuery,
+    ] = useSuspenseQueries({
         queries: [
-            trpc.generations.getById.queryOptions({id: generationId}),
-            trpc.voices.getAll.queryOptions(),
-        ]
+            trpc.generations.getById.queryOptions({ id: generationId }),
+            trpc.voices.getAll.queryOptions()
+        ],
     });
     const data = generationQuery.data;
     const { custom: customVoices, system: systemVoices } = voicesQuery.data;

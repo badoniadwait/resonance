@@ -12,6 +12,10 @@ import { useStore } from "@tanstack/react-form";
 import { useTypedAppFormContext } from "@/hooks/use-app-form";
 import { GenerateButton } from "./generate-button";
 import { ttsFormOptions } from "./text-to-speech-form";
+import { SettingsDrawer } from "./settings-drawer";
+import { VoiceSelectorButton } from "./voice-selector-button";
+import { HistoryDrawer } from "./history-drawer";
+import { PromptSuggestions } from "./prompt-suggestions";
 
 export function TextInputPanel() {
 
@@ -43,6 +47,12 @@ export function TextInputPanel() {
             <div className="shrink-0 p-4 lg:p-6">
 
                 <div className="flex flex-col gap-3 lg:hidden">
+                    <div className="flex items-center gap-2">
+                        <SettingsDrawer>
+                            <VoiceSelectorButton/>
+                        </SettingsDrawer>
+                        <HistoryDrawer />
+                    </div>
                     <GenerateButton
                         className="w-full"
                         disabled={isSubmitting}
@@ -80,7 +90,11 @@ export function TextInputPanel() {
                 ) :
                     (
                         <div className="hidden lg:block">
-                            <p>start typing....</p>
+                            <PromptSuggestions
+                                onSelect={(prompt) => {
+                                    return form.setFieldValue("text", prompt);
+                                }}
+                            />
                         </div>
                     )}
 
