@@ -1,5 +1,6 @@
 import z from "zod";
 import { createTRPCRouter, orgProcedure } from "../init";
+import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/db";
 import { TRPCError } from "@trpc/server";
 import { TEXT_MAX_LENGTH } from "@/features/text-to-speech/data/constants";
@@ -48,6 +49,7 @@ export const generationRouter = createTRPCRouter({
             })
         )
         .mutation(async ({ input, ctx }) => {
+            
             const voice = await prisma.voice.findUnique({
                 where: {
                     id: input.voiceId,
@@ -83,6 +85,12 @@ export const generationRouter = createTRPCRouter({
                     norm_loudness: true,
                 },
                 parseAs: "arrayBuffer",
+            });
+
+            Sentry.logger.info("Generation started", {
+                orgId: ctx.orgId,
+                voiceId:input.voiceId,
+                textLength: input.text.length,
             });
 
             if (!data) {
@@ -124,6 +132,12 @@ export const generationRouter = createTRPCRouter({
                         cloudinaryPublicId,
                     },
                 })
+
+                Sentry.logger.info("Audio generated", {
+                    orgId: ctx.orgId,
+                    generationId: generation.id,
+                });
+                
             } catch {
                 if(generationId) {
                     await prisma.generation.delete({
@@ -134,7 +148,12 @@ export const generationRouter = createTRPCRouter({
                     code: "INTERNAL_SERVER_ERROR",
                     message: "Failed to store generated audio",
                 });
-            }
+            };
+
+            Sentry.logger.info("Generation Failed", {
+                    orgId: ctx.orgId,
+                    voiceId: input.voiceId,
+                });
 
             if(!generationId || !cloudinaryPublicId) {
                 throw new TRPCError({
