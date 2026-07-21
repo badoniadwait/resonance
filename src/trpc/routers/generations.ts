@@ -85,6 +85,13 @@ export const generationRouter = createTRPCRouter({
                 parseAs: "arrayBuffer",
             });
 
+            if (!data) {
+                throw new TRPCError({
+                    code: "INTERNAL_SERVER_ERROR",
+                    message: `Generation API error: ${error ? JSON.stringify(error) : "No data returned"}`,
+                });
+            }
+
             const buffer = Buffer.from(data);
             let generationId: string | null = null;
             let cloudinaryPublicId: string | null = null;
