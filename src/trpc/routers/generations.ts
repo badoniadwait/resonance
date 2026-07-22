@@ -6,6 +6,8 @@ import { TRPCError } from "@trpc/server";
 import { TEXT_MAX_LENGTH } from "@/features/text-to-speech/data/constants";
 import { chatterbox } from "@/lib/chatterbox-client";
 import { uploadAudio } from "@/lib/cloudinary";
+import { polar } from "@/lib/polar";
+import { env } from "@/lib/env";
 
 export const generationRouter = createTRPCRouter({
     getById: orgProcedure
@@ -49,7 +51,28 @@ export const generationRouter = createTRPCRouter({
             })
         )
         .mutation(async ({ input, ctx }) => {
-            
+
+            try {
+                const customerState = await polar.customers.getStateExternal({
+                    externalId: ctx.orgId,
+                });
+                const hasActiveSubscription =
+                    (customerState.activeSubscriptions ?? []).length > 0;
+                if (!hasActiveSubscription) {
+                    throw new TRPCError({
+                        code: "FORBIDDEN",
+                        message: "SUBSCRIPTION_REQUIRED",
+                    });
+                }
+            } catch (err) {
+                if (err instanceof TRPCError) throw err;
+                // Customer doesn't exist in Polar yet -> no subscription
+                throw new TRPCError({
+                    code: "FORBIDDEN",
+                    message: "SUBSCRIPTION_REQUIRED",
+                });
+            }
+
             const voice = await prisma.voice.findUnique({
                 where: {
                     id: input.voiceId,
@@ -89,7 +112,7 @@ export const generationRouter = createTRPCRouter({
 
             Sentry.logger.info("Generation started", {
                 orgId: ctx.orgId,
-                voiceId:input.voiceId,
+                voiceId: input.voiceId,
                 textLength: input.text.length,
             });
 
@@ -137,12 +160,12 @@ export const generationRouter = createTRPCRouter({
                     orgId: ctx.orgId,
                     generationId: generation.id,
                 });
-                
+
             } catch {
-                if(generationId) {
+                if (generationId) {
                     await prisma.generation.delete({
-                        where: {id: generationId},
-                    }).catch(() => {});
+                        where: { id: generationId },
+                    }).catch(() => { });
                 }
                 throw new TRPCError({
                     code: "INTERNAL_SERVER_ERROR",
@@ -151,16 +174,31 @@ export const generationRouter = createTRPCRouter({
             };
 
             Sentry.logger.info("Generation Failed", {
-                    orgId: ctx.orgId,
-                    voiceId: input.voiceId,
-                });
+                orgId: ctx.orgId,
+                voiceId: input.voiceId,
+            });
 
-            if(!generationId || !cloudinaryPublicId) {
+            if (!generationId || !cloudinaryPublicId) {
                 throw new TRPCError({
                     code: "INTERNAL_SERVER_ERROR",
                     message: "Failed to store generated audio"
                 });
             }
+
+            polar.events
+        .ingest({
+          events: [
+            {
+              name: "tts-generation",
+              externalCustomerId: ctx.orgId,
+              metadata: { characters: input.text.length },
+              timestamp: new Date(),
+            },
+          ],
+        })
+        .catch(() => {
+        });
+            
             return {
                 id: generationId,
             };

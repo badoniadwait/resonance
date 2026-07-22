@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { VOICE_CATEGORIES } from "@/features/voices/data/voice-categories";
 import type { VoiceCategory } from "@/generated/prisma/client";
 import { uploadAudio } from "@/lib/cloudinary";
+import { polar } from "@/lib/polar";
 
 const createVoiceSchema = z.object({
     name: z.string().min(1, "Voice name is required"),
@@ -27,6 +28,20 @@ export async function POST(request: Request) {
                 status: 401
             });
     }
+
+    try {
+        const customerState = await polar.customers.getStateExternal({
+            externalId: orgId,
+        });
+        const hasActiveSubscription =
+            (customerState.activeSubscriptions ?? []).length > 0;
+        if (!hasActiveSubscription) {
+            return Response.json({ error: "SUBSCRIPTION_REQUIRED" }, { status: 403 });
+        }
+    } catch {
+        return Response.json({ error: "SUBSCRIPTION_REQUIRED" }, { status: 403 });
+    }
+
     const url = new URL(request.url);
 
     const validation = createVoiceSchema.safeParse({
@@ -161,7 +176,20 @@ export async function POST(request: Request) {
         );
     }
 
-
+    polar.events
+    .ingest({
+      events: [
+        {
+          name: "voice_creation",
+          externalCustomerId: orgId,
+          metadata: {},
+          timestamp: new Date(),
+        },
+      ],
+    })
+    .catch(() => {
+      // Silently fail - don't break the user experience for metering errors
+    });
 
     return Response.json(
         { name, message: "Voice created successfully" },
