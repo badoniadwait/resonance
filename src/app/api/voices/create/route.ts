@@ -50,6 +50,14 @@ export async function POST(request: Request) {
 
     const { category, language, name, description } = validation.data;
 
+    const contentLength = request.headers.get("content-length");
+    if (contentLength && Number(contentLength) > MAX_UPLOAD_SIZE_BYTES) {
+        return Response.json(
+            { error: "Audio file exceeds the 20 MB size limit" },
+            { status: 413 },
+        );
+    }
+
     const fileBuffer = await request.arrayBuffer();
 
     if (!fileBuffer.byteLength) {
@@ -77,14 +85,14 @@ export async function POST(request: Request) {
 
     const normalizedContentType = contentType.split(";")[0]?.trim() || "audio/wav";
 
-    let duration: number;
+    let duration: number | null;
     try {
         const metadata = await parseBuffer(
             new Uint8Array(fileBuffer),
             { mimeType: normalizedContentType },
             { duration: true },
         );
-        duration = metadata.format.duration ?? 0;
+        duration = metadata.format.duration ?? null;
     }
     catch {
         return Response.json(
@@ -93,7 +101,7 @@ export async function POST(request: Request) {
         );
     }
 
-    if (duration < MIN_AUDIO_DURATION_SECONDS) {
+    if (duration !== null && duration < MIN_AUDIO_DURATION_SECONDS) {
         return Response.json(
             {
                 error: `Audio too short (${duration.toFixed(1)}s). Minimum duration is ${MIN_AUDIO_DURATION_SECONDS} seconds.`,
@@ -135,7 +143,8 @@ export async function POST(request: Request) {
                 cloudinaryPublicId,
             },
         });
-    } catch {
+    } catch (error) {
+        console.error("Failed to create voice:", { name, orgId, error });
         if (createdVoiceId) {
             await prisma.voice
                 .delete({

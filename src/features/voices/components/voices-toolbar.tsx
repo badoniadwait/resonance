@@ -1,6 +1,6 @@
 import { useQueryState } from "nuqs";
 import { voicesSearchParams } from "../lib/params";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { Button } from "@/components/ui/button";
 import { Search, Sparkles } from "lucide-react";
@@ -14,6 +14,12 @@ export function VoicesToolbar() {
     const [localQuery, setLocalQuery] = useState(query);
 
     const debouncedSetQuery = useDebouncedCallback((value: string) => setQuery(value), 300);
+
+    useEffect(() => {
+        debouncedSetQuery.cancel();
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setLocalQuery(query);
+    }, [query, debouncedSetQuery]);
 
     return (
         <div className="space-y-4">

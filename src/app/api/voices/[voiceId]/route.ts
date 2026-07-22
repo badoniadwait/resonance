@@ -35,18 +35,44 @@ export async function GET(
     }
 
     const signedUrl = await getSignedAudioUrl(voice.cloudinaryPublicId);
-    const audioResponse = await fetch(signedUrl);
 
-    if(!audioResponse.ok) {
-        return new Response("Failed to fetch voice audio", {status: 502});
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
+    let audioResponse: Response;
+    try {
+        audioResponse = await fetch(signedUrl, {
+            signal: controller.signal,
+            headers: _request.headers.has("Range")
+                ? { Range: _request.headers.get("Range")! }
+                : undefined,
+        });
+    } catch {
+        clearTimeout(timeout);
+        return new Response("Failed to fetch voice audio", { status: 502 });
+    }
+    clearTimeout(timeout);
+
+    if (!audioResponse.ok && audioResponse.status !== 206) {
+        return new Response("Failed to fetch voice audio", { status: 502 });
     }
 
     const contentType = audioResponse.headers.get("content-type") || "audio/wav";
-    
+
+    const responseHeaders: Record<string, string> = {
+        "Content-Type": contentType,
+        "Cache-Control": voice.variant === "SYSTEM" ? "public, max-age=86400" : "private, max-age=3600",
+    };
+
+    const contentRange = audioResponse.headers.get("content-range");
+    const acceptRanges = audioResponse.headers.get("accept-ranges");
+    const contentLength = audioResponse.headers.get("content-length");
+    if (contentRange) responseHeaders["Content-Range"] = contentRange;
+    if (acceptRanges) responseHeaders["Accept-Ranges"] = acceptRanges;
+    if (contentLength) responseHeaders["Content-Length"] = contentLength;
+
     return new Response(audioResponse.body, {
-        headers: {
-            "Content-Type": contentType,
-            "Cache-Control" : voice.variant === "SYSTEM" ? "public, max-age=86400" : "private, max-age=3600"
-        }
+        status: audioResponse.status === 206 ? 206 : 200,
+        headers: responseHeaders,
     })
 };

@@ -2,8 +2,10 @@
 
 import {
     Dialog,
+    DialogClose,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -49,6 +51,17 @@ export function VoiceCreateDialog({
                             library.
                         </DrawerDescription>
                     </DrawerHeader>
+                    <VoiceCreateForm
+                        scrollable
+                        footer={(submit) => (
+                            <DrawerFooter>
+                                {submit}
+                                <DrawerClose asChild>
+                                    <Button variant="outline">Cancel</Button>
+                                </DrawerClose>
+                            </DrawerFooter>
+                        )}
+                    />
                 </DrawerContent>
             </Drawer>
         );
@@ -67,12 +80,12 @@ export function VoiceCreateDialog({
                 <VoiceCreateForm
                     scrollable
                     footer={(submit) => (
-                        <DrawerFooter>
-                            {submit}
-                            <DrawerClose asChild>
+                        <DialogFooter>
+                            <DialogClose asChild>
                                 <Button variant="outline">Cancel</Button>
-                            </DrawerClose>
-                        </DrawerFooter>
+                            </DialogClose>
+                            {submit}
+                        </DialogFooter>
                     )}
                 />
             </DialogContent>

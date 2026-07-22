@@ -1,4 +1,3 @@
-import { tr } from "date-fns/locale";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type RecordRTCType from "recordrtc"
 import WaveSurfer from "wavesurfer.js";
@@ -43,7 +42,11 @@ export function useAudioRecorder() {
             streamRef.current.getTracks().forEach((track) => track.stop());
             streamRef.current = null;
         }
-    }, [destroyWaveSurfer]);
+    }, []);
+
+    useEffect(() => {
+        return () => cleanup();
+    }, [cleanup]);
 
     useEffect(() => {
         if (!isRecording || !containerRef.current || !streamRef.current) return;
